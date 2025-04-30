@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>nginx auth request server</title>
+    <link rel="icon" href="data:,">
+    <meta name="robots" content="noindex, noarchive, noodp, nofollow">
+    <style>
+      html {
+        height: 100vh;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        height: 100vh;
+        text-align: center;
+        font-family: sans-serif;
+      }
+      h1, h2 {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>nginx auth request server</span></h1>
+      <h2>Login</h2>
+      <form action="/auth/login/" method="POST">
+        <p>
+            <input name="username" placeholder="Username" required style="width:100px">
+            <input type="password" name="password" placeholder="Password" required style="width:100px">
+            <input name="totp" placeholder="TOTP" required style="width:80px">
+        </p>
+        <p><input type="submit" value="Sign in"></p>
+      </form>
+    </div>
+    <script>
+    const form = document.querySelector("form");
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(new FormData(form))
+        }).then((response) => {
+            if (response.ok) {
+                document.location = "/";
+                return;
+            }
+            // Rate Limiting
+            if (response.status == 503) {
+                alert("Rate-Limited");
+                return;
+            }
+            
+            // Invalid user, password or totp
+            return response.text();
+        }).then(err => alert(err));
+    });
+    </script>
+  </body>
+</html>

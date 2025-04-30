@@ -1,0 +1,15 @@
+[package]
+name = "nginx-auth-server"
+version = "0.1.0"
+authors = ["Steffen Manzer"]
+edition = '2024'
+
+[dependencies]
+axum = "0.8"
+axum-extra = { version = "0.10", features = ["cookie"] }
+cookie = "0.18"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+pam = "0.8"
+otpauth = "0.5"
+uuid = { version = "1", features = ["v4"] }

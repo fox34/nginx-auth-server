@@ -1,0 +1,16 @@
+[Unit]
+Description=nginx auth request server
+After=network.target
+StartLimitBurst=5
+StartLimitIntervalSec=300
+
+[Service]
+ExecStart=/usr/local/bin/nginx-auth-proxy
+Type=exec
+User=www-data
+Group=staff
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
