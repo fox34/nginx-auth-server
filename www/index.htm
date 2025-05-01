@@ -47,20 +47,21 @@
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams(new FormData(form))
-        }).then((response) => {
+        }).then(async (response) => {
             if (response.ok) {
                 document.location = "/";
                 return;
             }
+            
             // Rate Limiting
             if (response.status == 503) {
-                alert("Rate-Limited");
+                alert("Rate-Limiting, bitte warten und nach einiger Zeit erneut versuchen!");
                 return;
             }
             
-            // Invalid user, password or totp
-            return response.text();
-        }).then(err => alert(err));
+            // Sonstiger Fehler
+            alert(await response.text());
+        })
     });
     </script>
   </body>
