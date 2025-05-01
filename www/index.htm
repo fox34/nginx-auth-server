@@ -43,9 +43,7 @@
         e.preventDefault();
         fetch(form.action, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', },
             body: new URLSearchParams(new FormData(form))
         }).then(async (response) => {
             if (response.ok) {
@@ -53,13 +51,13 @@
                 return;
             }
             
-            // Rate Limiting
+            // Rate limiting imposed by nginx
             if (response.status == 503) {
-                alert("Rate-Limiting, bitte warten und nach einiger Zeit erneut versuchen!");
+                alert("Rate limited, please wait for a few seconds before trying again.");
                 return;
             }
             
-            // Sonstiger Fehler
+            // Wrong username, password or totp
             alert(await response.text());
         })
     });
