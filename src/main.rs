@@ -1,12 +1,31 @@
 use axum::{body::Body, extract::{Form, State}, response::Response, routing::{get, post}, Router, http::StatusCode};
 use axum_extra::extract::cookie::{CookieJar, Cookie};
+use clap::Parser;
 use cookie::time::{Duration, OffsetDateTime};
 use serde::Deserialize;
 use std::{collections::HashMap, sync::{Arc, Mutex}, time::{SystemTime, UNIX_EPOCH}};
 use pam::Client;
+use once_cell::sync::Lazy;
 use otpauth::TOTP;
 use uuid::Uuid;
 use std::fs;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about)]
+struct Args {
+    /// Listening address, e.g. 127.0.0.1:1337
+    #[arg(long)]
+    listen: String,
+
+    /// Path of TOTP shadow file
+    #[arg(long)]
+    shadow_file: String,
+
+    /// Enable verbose output
+    #[arg(short, long)]
+    verbose: bool,
+}
+static ARGS: Lazy<Args> = Lazy::new(Args::parse);
 
 #[derive(Deserialize)]
 struct LoginForm {
@@ -19,7 +38,20 @@ type SessionStore = Arc<Mutex<HashMap<String, String>>>; // session_id -> userna
 
 #[tokio::main]
 async fn main() {
-    println!("Starting nginx-auth-proxy...");
+
+    // Check if provided shadow file exists
+    if !fs::exists(&ARGS.shadow_file).unwrap() {
+        eprintln!("shadow file '{}' does not exist.", &ARGS.shadow_file);
+        std::process::exit(1);
+    }
+
+    // Check if provided shadow file is readable by the current user
+    if let Err(e) = fs::File::open(&ARGS.shadow_file).map(|_| ()) {
+        eprintln!("shadow file '{}' ist not readable: {}", &ARGS.shadow_file, e);
+        std::process::exit(1);
+    }
+
+    println!("Starting nginx-auth-proxy on {} using shadow file '{}'.", ARGS.listen, ARGS.shadow_file);
 
     let sessions: SessionStore = Arc::new(Mutex::new(HashMap::new()));
     
@@ -29,21 +61,26 @@ async fn main() {
         .with_state(sessions.into())
     ;
     
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:1337").await.unwrap();
-    println!("Waiting for connections at {}", listener.local_addr().unwrap());
+    let listener = tokio::net::TcpListener::bind(&ARGS.listen).await.unwrap();
+    println!("Waiting for connections...");
     axum::serve(listener, app).await.unwrap();
 }
 
-// Internal session / auth check, used by nginx
+/// Internal session / auth check, used by nginx
 async fn check_login(
     State(sessions): State<Arc<SessionStore>>,
     jar: CookieJar,
 ) -> Response
 {
-    // Very suboptimal response building code
+    // Session cookie provided
     if let Some(id) = jar.get("nginx-auth") {
+
+        // Look up session
         let sessions = sessions.lock().unwrap();
         if let Some(username) = sessions.get(id.value()) {
+            if ARGS.verbose {
+                println!("Valid session found: {} → {}", id.value(), username);
+            }
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("Remote-User", username)
@@ -51,11 +88,20 @@ async fn check_login(
                 .unwrap()
             ;
         }
+
+        if ARGS.verbose {
+            println!("Provided session is invalid: {}", id.value())
+        }
     }
+
+    if ARGS.verbose {
+        println!("Session cookie not provided");
+    }
+
     Response::builder().status(StatusCode::UNAUTHORIZED).body(Body::from("")).unwrap()
 }
 
-// External login, used by the browser
+/// External login, used by the browser
 async fn handle_login(
     State(sessions): State<Arc<SessionStore>>,
     jar: CookieJar,
@@ -74,7 +120,7 @@ async fn handle_login(
     }
     
     // Check TOTP
-    let totp_file = fs::read_to_string("/etc/shadow_totp").unwrap();
+    let totp_file = fs::read_to_string(&ARGS.shadow_file).unwrap();
     let mut totp_map = HashMap::new();
     
     for (_, line) in totp_file.lines().enumerate() {
