@@ -9,6 +9,8 @@ use once_cell::sync::Lazy;
 use otpauth::TOTP;
 use uuid::Uuid;
 use std::fs;
+use std::io::prelude::*;
+use std::os::unix::fs::OpenOptionsExt;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -24,6 +26,10 @@ struct Args {
     /// Enable verbose output
     #[arg(short, long)]
     verbose: bool,
+
+    /// Optional path of persistent session file
+    #[arg(long)]
+    session_file: Option<String>,
 }
 static ARGS: Lazy<Args> = Lazy::new(Args::parse);
 
@@ -53,8 +59,35 @@ async fn main() {
 
     println!("Starting nginx-auth-proxy on {} using shadow file '{}'.", ARGS.listen, ARGS.shadow_file);
 
+    // Load persistent sessions
     let sessions: SessionStore = Arc::new(Mutex::new(HashMap::new()));
-    
+    if let Some(session_file) = &ARGS.session_file {
+        println!("- Using session file for persistent storage: '{}'", session_file);
+
+        if fs::exists(session_file).unwrap() {
+            println!("  Loading sessions from persistent storage...");
+            let persistent_sessions = fs::read_to_string(session_file).unwrap();
+
+            for (_, line) in persistent_sessions.lines().enumerate() {
+                if line.is_empty() {
+                    continue
+                }
+                let mut parts = line.splitn(2, ',');
+                let session_id = parts.next().unwrap_or("").trim();
+                let username = parts.next().unwrap_or("").trim();
+
+                if !session_id.is_empty() && !username.is_empty() {
+                    sessions.lock().unwrap().insert(session_id.to_string(), username.to_string());
+                    if ARGS.verbose {
+                        println!("  Loaded session {} → {}", session_id.to_string(), username.to_string());
+                    }
+                }
+
+                // TODO: Expiration
+            }
+        }
+    }
+
     let app = Router::new()
         .route("/auth/check", get(check_login))
         .route("/auth/login", post(handle_login))
@@ -81,6 +114,7 @@ async fn check_login(
             if ARGS.verbose {
                 println!("Valid session found: {} → {}", id.value(), username);
             }
+
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("Remote-User", username)
@@ -92,9 +126,7 @@ async fn check_login(
         if ARGS.verbose {
             println!("Provided session is invalid: {}", id.value())
         }
-    }
-
-    if ARGS.verbose {
+    } else if ARGS.verbose {
         println!("Session cookie not provided");
     }
 
@@ -128,11 +160,11 @@ async fn handle_login(
             continue
         }
         let mut parts = line.splitn(2, ',');
-        let key = parts.next().unwrap_or("").trim();
-        let value = parts.next().unwrap_or("").trim();
+        let username = parts.next().unwrap_or("").trim();
+        let secret = parts.next().unwrap_or("").trim();
 
-        if !key.is_empty() && !value.is_empty() {
-            totp_map.insert(key.to_string(), value.to_string());
+        if !username.is_empty() && !secret.is_empty() {
+            totp_map.insert(username.to_string(), secret.to_string());
         }
     }
     
@@ -146,9 +178,25 @@ async fn handle_login(
             return Err((StatusCode::UNAUTHORIZED, "Invalid TOTP"))
         }
         
-        // Session erzeugen
+        // Create and persist session
         let session_id = Uuid::new_v4().to_string();
         sessions.lock().unwrap().insert(session_id.clone(), form.username.clone());
+
+        if let Some(session_file) = &ARGS.session_file {
+            let mut file = fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .append(true)
+                .mode(0o600)
+                .open(session_file)
+                .unwrap();
+
+            if let Err(e) =  writeln!(file, "{},{}", session_id.clone(), form.username.clone()) {
+                eprintln!("Couldn't write to session file: {}", e);
+            } else if ARGS.verbose {
+                println!("Session written to persistent storage: '{}'", session_file);
+            }
+        }
 
         println!("Login successful: {}", &form.username);
         let mut expires = OffsetDateTime::now_utc();

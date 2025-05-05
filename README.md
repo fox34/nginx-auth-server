@@ -7,7 +7,7 @@ This is a **small and lightweight** http server, to be used by nginx to authenti
 ### Project goals
 
 Everything is *intentionally* kept as simple and minimal as viable.
-This project is a simple to understand tech-demo and minimal working example rather than a full-featured user and session manager.
+This project is more a simple to understand tech-demo and minimal working example rather than a full-featured user and session manager.
 
 This code is provided as-is without support.
 Since this is my first rust project, the code quality may vary and be suboptimal to some extent.
@@ -17,7 +17,6 @@ Use at your own risk, error handling is very, very basic.
 
 ### Planned features
 
-- Persistent session storage
 - Session expiration
 - Logout functionality
 

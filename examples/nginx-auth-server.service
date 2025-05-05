@@ -5,7 +5,7 @@ StartLimitBurst=5
 StartLimitIntervalSec=300
 
 [Service]
-ExecStart=/usr/local/bin/nginx-auth-server --listen 127.0.0.1:1337 --shadow-file /etc/shadow_totp
+ExecStart=/usr/local/bin/nginx-auth-server --listen 127.0.0.1:1337 --shadow-file /etc/shadow_totp --session-file /tmp/nginx-auth-server.sessions
 Type=exec
 User=www-data
 Group=staff
