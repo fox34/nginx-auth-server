@@ -480,7 +480,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nginx-auth-proxy"
+name = "nginx-auth-server"
 version = "0.1.0"
 dependencies = [
  "axum",

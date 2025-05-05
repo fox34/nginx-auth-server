@@ -4,12 +4,20 @@ version = "0.1.0"
 authors = ["Steffen Manzer"]
 edition = '2024'
 
+# https://github.com/johnthagen/min-sized-rust
+[profile.release]
+lto = true          # Enable link-time optimization
+codegen-units = 1   # Reduce number of codegen units to increase optimizations
+panic = 'abort'     # Abort on panic
+strip = true        # Strip symbols from binary
+
 [dependencies]
 axum = "0.8"
 axum-extra = { version = "0.10", features = ["cookie"] }
 cookie = "0.18"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
-pam = "0.8"
+#pam = "0.8" # uses `users`, see RUSTSEC-2023-0059 and commit #0f6862e
+pam = { git = "https://github.com/1wilkens/pam.git", rev = "daf26ae3512d8e5a7478ccff1e4232ef5ebf9b03" }
 otpauth = "0.5"
 uuid = { version = "1", features = ["v4"] }
