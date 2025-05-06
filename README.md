@@ -1,6 +1,6 @@
 # nginx auth request server
 
-This is a **small and lightweight** http server, to be used by nginx to authenticate users against linux system users via PAM and an auxiliary totp file with `ngx_http_auth_request_module`.
+This is a **small and lightweight** http authentication server, to be used by nginx with `ngx_http_auth_request_module` to authenticate your website visitors against linux system users via PAM, providing additional security with two-factor-authentication.
 
 ## Request flow
 
@@ -12,17 +12,11 @@ This is a **small and lightweight** http server, to be used by nginx to authenti
 
 Everything is *intentionally* kept as simple and minimal as viable.
 This project is more a simple to understand tech-demo and minimal working example rather than a full-featured user and session manager.
+If you really do want to add features, please open a *discussion* first before you create a PR.
+Otherwise, feel free to create a fork for your personal requirements.
 
-This code is provided as-is without support.
-Since this is my first rust project, the code quality may vary and be suboptimal to some extent.
-Feel free to open a PR to improve potential issues. :-)
-
-Use at your own risk, error handling is very, very basic.
-
-### Planned features
-
-- Session expiration
-- Logout functionality
+Since this is my very first rust project, code may be suboptimal or even insecure to some extent - use at your own risk.
+PRs to improve code quality and security are highly appreciated.
 
 ## Recommended usage
 

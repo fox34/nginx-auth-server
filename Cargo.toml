@@ -1,6 +1,6 @@
 [package]
 name = "nginx-auth-server"
-version = "0.3.0"
+version = "1.0.0"
 authors = ["Steffen Manzer"]
 edition = '2024'
 
@@ -14,12 +14,13 @@ strip = true        # Strip symbols from binary
 [dependencies]
 axum = "0.8"
 axum-extra = { version = "0.10", features = ["cookie"] }
-cookie = "0.18"
+chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.5", features = ["derive"] }
-tokio = { version = "1", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
-#pam = "0.8" # uses `users`, see RUSTSEC-2023-0059 and commit #0f6862e
-pam = { git = "https://github.com/1wilkens/pam.git", rev = "daf26ae3512d8e5a7478ccff1e4232ef5ebf9b03" }
-otpauth = "0.5"
-uuid = { version = "1", features = ["v4"] }
+cookie = "0.18"
 once_cell = "1.21"
+otpauth = "0.5"
+pam = { git = "https://github.com/1wilkens/pam.git", rev = "daf26ae3512d8e5a7478ccff1e4232ef5ebf9b03" } # latest release 0.8 still uses deprecated `users` crate, this rev switched to `uzers`
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+uuid = { version = "1", features = ["v4"] }
