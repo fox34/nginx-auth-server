@@ -33,4 +33,4 @@ Modify to your needs:
 3. Add TOTP secrets comma-separated as `username,secret` in the shadow file you specified in the unit file (`--shadow-file`, defaults to `/etc/shadow_totp`).  An example is provided in the `examples` directory. **Only users present in this file are allowed to log in.**
 4. Set file permissions of this shadow file accordingly (readable by your selected service user, preferrably not readable by any other users or groups).
 5. Add login form to `/var/www/auth`.
-6. Add/modify nginx config as shown in `examples/nginx`.
+6. Include/add/modify nginx snippets and config as shown in `examples/etc/nginx`.
