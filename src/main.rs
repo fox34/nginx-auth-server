@@ -213,10 +213,14 @@ async fn handle_logout(
     // Session cookie provided
     if let Some(id) = jar.get("nginx-auth") {
 
+        let mut session_guard = sessions.lock().unwrap();
+
         // Session found
-        if let Some(session_data) = sessions.lock().unwrap().get(id.value()) {
+        if let Some(session_data) = session_guard.get(id.value()) {
             println!("User {} logout, removing session {}", id.value(), session_data.username.to_string());
-            sessions.lock().unwrap().remove(id.value());
+            session_guard.remove(id.value());
+            drop(session_guard);
+            save_sessions_to_file(&sessions);
         }
 
         // Remove cookie
