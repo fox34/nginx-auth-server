@@ -22,7 +22,7 @@ PRs to improve code quality and security are highly appreciated.
 
 Modify to your needs:
 
-1. Compile using `cargo build --production` and place the resulting binary in `/usr/local/bin`.
+1. Compile using `cargo build --production` and place the resulting binary in `/usr/local/bin`. You probably need to install `libclang-dev build-essential libpam0g-dev libpam0g` for the required `pam`-crate to compile.
 2. Add and enable systemd service. A sample for the unit file is in the `examples` directory.
 3. Add TOTP secrets comma-separated as `username,secret` in the shadow file you specified in the unit file (`--shadow-file`, defaults to `/etc/shadow_totp`).  An example is provided in the `examples` directory. **Only users present in this file are allowed to log in.**
 4. Set file permissions of this shadow file accordingly (readable by your selected service user, preferrably not readable by any other users or groups).
