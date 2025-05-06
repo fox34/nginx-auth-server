@@ -206,7 +206,7 @@
             <mxPoint x="240" y="760" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="2D67FL0-L3QXiqsqjlzO-3" value="&lt;div&gt;HTTP-GET / -POST&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="2D67FL0-L3QXiqsqjlzO-2">
+        <mxCell id="2D67FL0-L3QXiqsqjlzO-3" value="&lt;div&gt;GET /auth/logout/&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="2D67FL0-L3QXiqsqjlzO-2">
           <mxGeometry relative="1" as="geometry">
             <mxPoint y="-10" as="offset" />
           </mxGeometry>
