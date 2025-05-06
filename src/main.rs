@@ -9,7 +9,7 @@ use pam::Client;
 use serde::{Serialize, Deserialize};
 use std::{collections::HashMap, sync::{Arc, Mutex}, time::{SystemTime, UNIX_EPOCH}};
 use std::fs;
-use std::io::prelude::*;
+use std::io::{BufRead, BufReader, prelude::*};
 use std::os::unix::fs::OpenOptionsExt;
 use tokio::time::{interval, Duration as TokioDuration};
 use uuid::Uuid;
@@ -156,48 +156,39 @@ async fn handle_login(
         return Err((StatusCode::UNAUTHORIZED, "Invalid username or password"));
     }
     
-    // Check TOTP
-    let totp_file = fs::read_to_string(&ARGS.shadow_file).unwrap();
-    let mut totp_map = HashMap::new();
-    
-    for (_, line) in totp_file.lines().enumerate() {
-        if line.is_empty() {
-            continue
+    // Search TOTP secret in shadow_file
+    let file = fs::File::open(ARGS.shadow_file.clone()).unwrap();
+    let reader = BufReader::new(file);
+    for line in reader.lines() {
+        if let Some((user, secret)) = line.unwrap().split_once(',') {
+
+            // Username found
+            if user == &form.username {
+                let code: u32 = form.totp.parse().unwrap_or(0);
+                let totp = TOTP::from_base32(secret).unwrap();
+                if !totp.verify(code, 30, SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) {
+                    println!("Login denied: Invalid TOTP for {}", &form.username);
+                    return Err((StatusCode::UNAUTHORIZED, "Invalid TOTP"))
+                }
+
+                // Create session
+                let session_id = Uuid::new_v4().to_string();
+                let expires = Utc::now() + ARGS.session_lifetime;
+                sessions.lock().unwrap().insert(session_id.clone(), SessionData { username: form.username.clone(), expires_at: expires });
+
+                // Persist sessions in file, if enabled
+                save_sessions_to_file(&sessions);
+
+                println!("Login successful: {}", &form.username);
+                let offset_dt = OffsetDateTime::from_unix_timestamp(expires.timestamp())
+                    .expect("valid timestamp");
+
+                return Ok((
+                    jar.add(Cookie::build(("nginx-auth", session_id)).path("/").http_only(true).expires(offset_dt)),
+                    "Login successful"
+                ));
+            }
         }
-        let mut parts = line.splitn(2, ',');
-        let username = parts.next().unwrap_or("").trim();
-        let secret = parts.next().unwrap_or("").trim();
-
-        if !username.is_empty() && !secret.is_empty() {
-            totp_map.insert(username.to_string(), secret.to_string());
-        }
-    }
-    
-    let totp_map = Arc::new(totp_map);
-
-    if let Some(user_entry) = totp_map.get(&form.username) {
-        let code: u32 = form.totp.parse().unwrap_or(0);
-        let totp = TOTP::from_base32(user_entry).unwrap();
-        if !totp.verify(code, 30, SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) {
-            println!("Login denied: Invalid TOTP for {}", &form.username);
-            return Err((StatusCode::UNAUTHORIZED, "Invalid TOTP"))
-        }
-        
-        // Create session
-        let session_id = Uuid::new_v4().to_string();
-        let expires = Utc::now() + ARGS.session_lifetime;
-        sessions.lock().unwrap().insert(session_id.clone(), SessionData { username: form.username.clone(), expires_at: expires });
-
-        // Persist sessions in file, if enabled
-        save_sessions_to_file(&sessions);
-
-        println!("Login successful: {}", &form.username);
-        let offset_dt = OffsetDateTime::from_unix_timestamp(expires.timestamp())
-            .expect("valid timestamp");
-        return Ok((
-            jar.add(Cookie::build(("nginx-auth", session_id)).path("/").http_only(true).expires(offset_dt)),
-            "Login successful"
-        ));
     }
     
     println!("Login denied: Missing TOTP {}", &form.username);

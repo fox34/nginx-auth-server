@@ -1,6 +1,6 @@
 [package]
 name = "nginx-auth-server"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Steffen Manzer"]
 edition = '2024'
 
