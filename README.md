@@ -2,6 +2,10 @@
 
 This is a **small and lightweight** http server, to be used by nginx to authenticate users against linux system users via PAM and an auxiliary totp file with `ngx_http_auth_request_module`.
 
+## Request flow
+
+![Request flow diagram](docs/nginx-auth-request.svg)
+
 ## Scope and code quality
 
 ### Project goals

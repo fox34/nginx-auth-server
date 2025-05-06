@@ -89,7 +89,7 @@ async fn main() {
     }
 
     let app = Router::new()
-        .route("/auth/check", get(check_login))
+        .route("/auth/check", get(check_session))
         .route("/auth/login", post(handle_login))
         .with_state(sessions.into())
     ;
@@ -100,7 +100,7 @@ async fn main() {
 }
 
 /// Internal session / auth check, used by nginx
-async fn check_login(
+async fn check_session(
     State(sessions): State<Arc<SessionStore>>,
     jar: CookieJar,
 ) -> Response
