@@ -1,30 +1,111 @@
-# nginx auth request server
+# nginx-auth-request-server
 
-This is a **small and lightweight** http authentication server, to be used by nginx with `ngx_http_auth_request_module` to authenticate your website visitors against linux system users via PAM, providing additional security with two-factor-authentication.
+A **lightweight HTTP authentication backend** to be used with Nginx (`ngx_http_auth_request_module`) for authenticating website visitors against Linux system users via PAM with TOTP-based two-factor authentication.
 
-## Request flow
+---
+
+## Request Flow
 
 ![Request flow diagram](docs/nginx-auth-request.svg)
 
-## Scope and code quality
+---
 
-### Project goals
+## Project Scope and Goals
 
-Everything is *intentionally* kept as simple and minimal as viable.
-This project is more a simple to understand tech-demo and minimal working example rather than a full-featured user and session manager.
-If you really do want to add features, please open a *discussion* first before you create a PR.
-Otherwise, feel free to create a fork for your personal requirements.
+This project is designed to be a **simple and minimal authenticator** rather than a full-featured user/session manager.
+It is intentionally kept simple and easy to understand for improved hackability.
 
-Since this is my very first rust project, code may be suboptimal or even insecure to some extent - use at your own risk.
-PRs to improve code quality and security are highly appreciated.
+> If you want to add new features, please open a *discussion* first before creating a PR.  
+> For more extensive changes, feel free to fork it to suit your needs.
 
-## Recommended usage
+Since this is my very first rust project, code may be suboptimal to some extent - use at your own risk.
+PRs to improve code quality and security are highly appreciated!
 
-Modify to your needs:
+---
 
-1. Compile using `cargo build --production` or download a precompiled binary from the release section and place the binary in `/usr/local/bin`. Note: You probably need to install `libclang-dev build-essential libpam0g-dev libpam0g` for the required `pam`-crate to compile.
-2. Add and enable systemd service. A sample for the unit file is in the `examples` directory.
-3. Add TOTP secrets comma-separated as `username,secret` in the shadow file you specified in the unit file (`--shadow-file`, defaults to `/etc/shadow_totp`).  An example is provided in the `examples` directory. **Only users present in this file are allowed to log in.**
-4. Set file permissions of this shadow file accordingly (readable by your selected service user, preferrably not readable by any other users or groups).
-5. Add login form to `/var/www/auth`.
-6. Include/add/modify nginx snippets and config as shown in `examples/etc/nginx`.
+## Usage example
+
+### 1. Acquiring the binary
+
+Use a precompiled binary from the [releases](https://github.com/YOUR_REPO/releases) section or build it yourself:
+
+```bash
+cargo build --release
+```
+
+You might need to install the following dependencies first:
+
+```bash
+sudo apt install libclang-dev build-essential libpam0g-dev libpam0g
+```
+
+---
+
+### 2. Create the TOTP shadow file
+
+- Example path: `/etc/shadow_totp` (customizable via `--shadow-file`)
+- Format: `username,totp-secret` (Base32)
+- You can generate TOTP secrets with any generator you want ([example web application](https://it-tools.tech/otp-generator))
+- **Only users listed in this file are allowed to log in!**
+
+Example:
+
+```
+alice,JBSWY3DPEHPK3PXP
+bob,KZXW6YTBORSXEZJO
+```
+
+Set appropriate permissions:
+
+```bash
+sudo chown YOUR_SERVICE_USER /etc/shadow_totp
+sudo chmod 600 /etc/shadow_totp
+```
+
+---
+
+### 3. Set up as a systemd service
+
+A sample unit file is available in the `examples` directory.
+
+```bash
+# Copy compiled binary to /usr/local/bin; change source path accordingly if you downloaded a precompiled binary
+sudo cp target/release/nginx-auth-request-server /usr/local/bin/
+
+# Modify unit file as needed
+sudo cp examples/systemd.service /etc/systemd/system/
+
+# Enable and start service
+sudo systemctl enable --now nginx-auth-request-server
+```
+
+---
+
+### 4. Configure nginx
+
+- Provide a login form at `/var/www/auth`
+- Adjust nginx config using snippets from `examples/etc/nginx`
+
+Make sure to include request rate limiting (e.g. `limit_req_zone`) to mitigate brute-force attacks.
+
+---
+
+## Security Notes
+
+- The binary has access to PAM: keep it secure.
+- TOTP shadow file must be protected from unauthorized access.
+- Brute-force protection is implemented **via nginx only** — consider checking or adding further safeguards if used in production.
+
+---
+
+## License
+
+Licensed under **MIT**.
+
+---
+
+## Contributing
+
+Bugfixes and code improvements are welcome.
+
+> For new features: please open a GitHub Discussion first to align scope and vision.
