@@ -26,7 +26,7 @@
   </head>
   <body>
     <div>
-      <h1>nginx auth request server</span></h1>
+      <h1>nginx auth request server</h1>
       <h2>Login</h2>
       <form action="/auth/login/" method="POST">
         <p>
@@ -52,7 +52,7 @@
             }
             
             // Rate limiting imposed by nginx
-            if (response.status == 503) {
+            if (response.status === 503) {
                 alert("Rate limited, please wait for a few seconds before trying again.");
                 return;
             }
