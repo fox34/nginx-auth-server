@@ -2,8 +2,6 @@
 
 A **lightweight HTTP authentication backend** to be used with Nginx (`ngx_http_auth_request_module`) for authenticating website visitors against Linux system users via PAM with TOTP-based two-factor authentication.
 
----
-
 ## Request Flow
 
 ![Request flow diagram](docs/nginx-auth-request.svg)
@@ -23,7 +21,31 @@ PRs to improve code quality and security are highly appreciated!
 
 ---
 
-## Usage example
+## Usage
+
+```
+Usage: nginx-auth-server [OPTIONS] --listen <LISTEN> --shadow-file <SHADOW_FILE>
+
+Options:
+      --listen <LISTEN>
+          Listening address, e.g. 127.0.0.1:1337
+      --shadow-file <SHADOW_FILE>
+          Path of TOTP shadow file, e.g. /etc/shadow_totp
+      --session-file <SESSION_FILE>
+          Session persistence file, e.g. /tmp/nginx-auth-server.sessions
+      --session-lifetime <SESSION_LIFETIME>
+          Session lifetime. Valid: <number><m|h|d|y> (e.g. 30m, 2h, 7d, 1y) [default: 1y]
+  -v, --verbose
+          Enable verbose output
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+```
+
+---
+
+## Setup
 
 ### 1. Acquiring the binary
 
@@ -38,8 +60,6 @@ You might need to install the following dependencies first:
 ```bash
 sudo apt install libclang-dev build-essential libpam0g-dev libpam0g
 ```
-
----
 
 ### 2. Create the TOTP shadow file
 
@@ -62,8 +82,6 @@ sudo chown YOUR_SERVICE_USER /etc/shadow_totp
 sudo chmod 600 /etc/shadow_totp
 ```
 
----
-
 ### 3. Set up as a systemd service
 
 A sample unit file is available in the `examples` directory.
@@ -78,8 +96,6 @@ sudo cp examples/systemd.service /etc/systemd/system/
 # Enable and start service
 sudo systemctl enable --now nginx-auth-request-server
 ```
-
----
 
 ### 4. Configure nginx
 
@@ -96,16 +112,11 @@ Make sure to include request rate limiting (e.g. `limit_req_zone`) to mitigate b
 - TOTP shadow file must be protected from unauthorized access.
 - Brute-force protection is implemented **via nginx only** — consider checking or adding further safeguards if used in production.
 
----
-
 ## License
 
 Licensed under **MIT**.
 
----
-
 ## Contributing
 
 Bugfixes and code improvements are welcome.
-
-> For new features: please open a GitHub Discussion first to align scope and vision.
+For new features: please open a GitHub Discussion first to align scope and vision.
