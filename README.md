@@ -99,7 +99,7 @@ sudo systemctl enable --now nginx-auth-request-server
 
 ### 4. Configure nginx
 
-- Provide a login form at `/var/www/auth`
+- Provide a login form at `/var/www/auth` (A sample login form is available in the examples directory.)
 - Adjust nginx config using snippets from `examples/etc/nginx`
 
 Make sure to include request rate limiting (e.g. `limit_req_zone`) to mitigate brute-force attacks.
