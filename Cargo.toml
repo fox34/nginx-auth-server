@@ -1,6 +1,8 @@
 [package]
 name = "nginx-auth-server"
 version = "1.0.3"
+license = "MIT"
+license-file = "LICENSE"
 authors = ["Steffen Manzer"]
 edition = '2024'
 
