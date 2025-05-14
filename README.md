@@ -97,6 +97,8 @@ sudo cp examples/systemd.service /etc/systemd/system/
 sudo systemctl enable --now nginx-auth-request-server
 ```
 
+Please note that the specified user most likely needs to be a member of the groups `staff` and/or `shadow` for PAM to work.
+
 ### 4. Configure nginx
 
 - Provide a login form at `/var/www/auth` (A sample login form is available in the examples directory.)
