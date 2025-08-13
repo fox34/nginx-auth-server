@@ -62,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     }
 
-    println!("Starting nginx-auth-proxy on {} using shadow file '{}'.", ARGS.listen, ARGS.shadow_file);
+    println!("Starting nginx-auth-server v{} on {} using shadow file '{}'.", env!("CARGO_PKG_VERSION"), ARGS.listen, ARGS.shadow_file);
     println!("- Session lifetime: {}", ARGS.session_lifetime);
 
     // Load persistent sessions, if enabled
