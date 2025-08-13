@@ -91,10 +91,10 @@ A sample unit file is available in the `examples` directory.
 sudo cp target/release/nginx-auth-request-server /usr/local/bin/
 
 # Modify unit file as needed
-sudo cp examples/systemd.service /etc/systemd/system/
+sudo cp examples/etc/systemd/system/nginx-auth-server.service /etc/systemd/system/
 
 # Enable and start service
-sudo systemctl enable --now nginx-auth-request-server
+sudo systemctl enable --now nginx-auth-server.service
 ```
 
 Please note that the specified user most likely needs to be a member of the groups `staff` and/or `shadow` for PAM to work.
