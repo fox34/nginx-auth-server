@@ -138,7 +138,7 @@ pub async fn handle_login(
             Cookie::build(("nginx-auth", session_id))
                 .path("/")
                 .http_only(true)
-                .same_site(cookie::SameSite::Strict)
+                .same_site(cookie::SameSite::Lax)
                 .expires(offset_dt)
         ),
         "Login successful"
