@@ -79,22 +79,22 @@ pub async fn handle_login(
     Form(form): Form<LoginForm>,
 ) -> Result<(CookieJar, &'static str), (StatusCode, &'static str)> {
 
-    // Validate username
+    // Validate input data: username
     let username = form.username.trim();
     if username.is_empty() {
         return Err((StatusCode::BAD_REQUEST, "Username cannot be empty"));
     }
 
-    // Validate TOTP format
+    // TOTP format
     let code = match form.totp.trim().parse::<u32>() {
         Ok(c) => c,
         Err(_) => { return Err((StatusCode::BAD_REQUEST, "Invalid TOTP format")); }
     };
 
-    // 1. First verify TOTP (to check if user is in TOTP shadow file)
-    if !verify_totp(username, code, &state.totp_cache).await {
-        println!("Login denied: Invalid TOTP for {}", username);
-        return Err((StatusCode::UNAUTHORIZED, "Invalid TOTP"));
+    // Username is not in TOTP shadow file
+    if !state.totp_cache.read().await.contains_key(username) {
+        println!("Login denied: User {} not in TOTP shadow file", username);
+        return Err((StatusCode::UNAUTHORIZED, "Invalid username, password or TOTP"));
     }
 
     // Create PAM-Client
@@ -106,11 +106,17 @@ pub async fn handle_login(
         }
     };
 
-    // 2. Then check against system users (to prevent information leakage about system users not in TOTP file)
+    // 1. Check password
     client.conversation_mut().set_credentials(username, &form.password);
     if client.authenticate().is_err() {
-        println!("Login denied: Username {} or password invalid", username);
-        return Err((StatusCode::UNAUTHORIZED, "Invalid username or password"));
+        println!("Login denied: Wrong password for user {}", username);
+        return Err((StatusCode::UNAUTHORIZED, "Invalid username, password or TOTP"));
+    }
+
+    // 2. Verify TOTP
+    if !verify_totp(username, code, &state.totp_cache).await {
+        println!("Login denied: Invalid TOTP for {}", username);
+        return Err((StatusCode::UNAUTHORIZED, "Invalid username, password or TOTP"));
     }
 
     // Create session
