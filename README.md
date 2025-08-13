@@ -88,7 +88,7 @@ A sample unit file is available in the `examples` directory.
 
 ```bash
 # Copy compiled binary to /usr/local/bin; change source path accordingly if you downloaded a precompiled binary
-sudo cp target/release/nginx-auth-request-server /usr/local/bin/
+sudo cp target/release/nginx-auth-server /usr/local/bin/
 
 # Modify unit file as needed
 sudo cp examples/etc/systemd/system/nginx-auth-server.service /etc/systemd/system/
