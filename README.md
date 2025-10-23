@@ -49,7 +49,7 @@ Options:
 
 ### 1. Acquiring the binary
 
-Use a precompiled binary from the [releases](https://github.com/YOUR_REPO/releases) section or build it yourself:
+Use a precompiled binary from the [releases](https://github.com/fox34/nginx-auth-server/releases) section or build it yourself:
 
 ```bash
 cargo build --release
